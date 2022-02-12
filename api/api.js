@@ -21,12 +21,12 @@ router.get('/students', student_controller.student_list);
 // DELETE api/student/1  - Delete Student with id = 1
 router.delete('/student/:id', student_controller.student_delete);
 
-
+// POST request for creating student.
+router.post('/student/create/:id/:name/:class/:major', student_controller.student_create_post);
 
 /*
 
-// POST request for creating student.
-router.post('/student/create', student_controller.student_create_post);
+
 
 // GET request to delete student.
 router.get('/student/:id/delete', student_controller.student_delete_get);
