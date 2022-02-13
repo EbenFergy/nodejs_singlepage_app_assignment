@@ -60,6 +60,11 @@ class StudentModel {
 	// console.log("lastID", lastID);
 	// console.log("newStudentID", newStudentObj.id)
   }
+
+//   update one student by POST
+  updateStudent(){
+
+  }
 }
 
 module.exports = StudentModel;

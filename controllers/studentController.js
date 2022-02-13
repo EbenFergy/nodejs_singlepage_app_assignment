@@ -31,6 +31,15 @@ exports.student_create_post = function (req, res) {
   res.send(result);
 };
 
+// Handle student update on POST.
+exports.student_update_post = function (req, res) {
+  //if the data is JSON, access the data using req.body.<field> ie. req.body.name
+  studentModel.updateStudent(req.params);
+  console.log("updating post........", req.params);
+  result = { result: "success" };
+  res.send(result);
+};
+
 //NOT IMPLEMENTED
 
 // Display student create form on GET.
@@ -51,9 +60,4 @@ exports.student_delete_post = function (req, res) {
 // Display student update form on GET.
 exports.student_update_get = function (req, res) {
   res.send("NOT IMPLEMENTED: student update GET");
-};
-
-// Handle student update on POST.
-exports.student_update_post = function (req, res) {
-  res.send("NOT IMPLEMENTED: student update POST");
 };

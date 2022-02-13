@@ -23,17 +23,6 @@ class viewHelper {
     return element;
   }
 
-  // static createDataRow(label, data) {
-  // 	let row = viewHelper.createElement('div', ['form-group', 'row']);
-  // 	let labelColumn = viewHelper.createElement('label', ['col-sm-2','col-form-label']);
-  // 	labelColumn.textContent = label;
-  // 	let fieldColumn = viewHelper.createElement('div', ['col-sm-10']);
-  // 	let fieldText = viewHelper.createElement('label', ['form-control-plaintext']);
-  // 	fieldText.textContent = data;
-  // 	fieldColumn.append(fieldText);
-  // 	row.append(labelColumn, fieldColumn);
-  // 	return row;
-  // }
 }
 
 class StudentModel {
@@ -101,6 +90,26 @@ class StudentModel {
     xhttp.open(
       "POST",
       `http://localhost:3050/api/student/create/${obj.id}/${obj.name}/${obj.class}/${obj.major}`,
+      true
+    );
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.send();
+  }
+
+  updateStudentData(updateObj){
+	console.log("received object", obj);
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        console.log("sent obj to backend", obj);
+        const element = document.querySelector("#root");
+        let event = new CustomEvent("studentAdded", { detail: "success" });
+        element.dispatchEvent(event);
+      }
+    };
+    xhttp.open(
+      "POST",
+      `http://localhost:3050/api/student/${updateObj.id}/update/${updateObj.name}/${updateObj.class}/${updateObj.major}`,
       true
     );
     xhttp.setRequestHeader("Content-type", "application/json");
@@ -616,6 +625,7 @@ class StudentController {
 
   handleCardClick(id) {
     console.log("modal " + id + " clicked");
+	modalToggle = true;
     this.view.createStudentModal(id);
   }
 
@@ -663,7 +673,7 @@ class StudentController {
       class: inputClass,
       major: inputMajor,
     };
-    // this.model.updateStudentData(updateObj);
+    this.model.updateStudentData(updateObj);
 	console.log("updating object", updateObj);
   }
 
