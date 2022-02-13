@@ -62,8 +62,17 @@ class StudentModel {
   }
 
 //   update one student by POST
-  updateStudent(){
+  updateStudent(updateObj){
+	console.log("updated object in backend", updateObj);
 
+	let objectToUpdate = this.studentList.find(student => student.id === Number(updateObj.id));
+	console.log("found student", objectToUpdate);
+
+	objectToUpdate.name = updateObj.name;
+	objectToUpdate.class = updateObj.class;
+	objectToUpdate.major = updateObj.major;
+
+	console.log("I have updated the list", this.studentList)
   }
 }
 

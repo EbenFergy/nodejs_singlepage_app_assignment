@@ -22,7 +22,6 @@ class viewHelper {
     }
     return element;
   }
-
 }
 
 class StudentModel {
@@ -96,14 +95,14 @@ class StudentModel {
     xhttp.send();
   }
 
-  updateStudentData(updateObj){
-	console.log("received object", obj);
+  updateStudentData(updateObj) {
+    console.log("received updated object", updateObj);
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
-        console.log("sent obj to backend", obj);
+        console.log("sent updated obj to backend", updateObj);
         const element = document.querySelector("#root");
-        let event = new CustomEvent("studentAdded", { detail: "success" });
+        let event = new CustomEvent("studentUpdated", { detail: "success", id:updateObj.id });
         element.dispatchEvent(event);
       }
     };
@@ -196,6 +195,7 @@ class StudentView {
   }
 
   createStudentModal(id) {
+	  
     if (modalToggle === true) {
       let student = this.studentData.find((x) => x.id === id);
       const modal = document.querySelector("#studentModal");
@@ -227,8 +227,7 @@ class StudentView {
       $("#studentModal").modal("toggle");
     } 
 	
-	
-	
+	// edit page
 	else if (modalToggle === false) {
       let modalTitle = viewHelper.getElement("#studentModalLabel");
       modalTitle.textContent = "Edit Student Modal ";
@@ -251,7 +250,7 @@ class StudentView {
         row.append(labelColumn, fieldColumn);
         console.log("asdasd", findEdit);
 
-		inputName = fieldColumn.value;
+        inputName = fieldColumn.value;
 
         fieldColumn.addEventListener(
           "change",
@@ -273,12 +272,12 @@ class StudentView {
 
         row.append(labelColumn, fieldColumn);
 
-          inputClass = fieldColumn.value;
-		  
-		  fieldColumn.addEventListener(
-			"change",
-			(e) => (inputClass = e.target.value)
-		  );
+        inputClass = fieldColumn.value;
+
+        fieldColumn.addEventListener(
+          "change",
+          (e) => (inputClass = e.target.value)
+        );
 
         return row;
       };
@@ -295,7 +294,7 @@ class StudentView {
 
         row.append(labelColumn, fieldColumn);
 
-		inputMajor = fieldColumn.value;
+        inputMajor = fieldColumn.value;
 
         fieldColumn.addEventListener(
           "change",
@@ -326,6 +325,7 @@ class StudentView {
       btnFooterSave.setAttribute("data-dismiss", "modal");
       btnFooterSave.textContent = "Save";
       btnFooterSave.setAttribute("onClick", `app.handleSaveToModal(${id})`);
+    //   btnFooterSave.setAttribute("onClick", `app.displayAfterSave(${id})`);
 
       let modalFooter = viewHelper.getElement("#studentModalFooter");
 
@@ -343,22 +343,61 @@ class StudentView {
     } 
 	
 	
-	
 	else if (modalToggle === "none") {
       let student = this.studentData.find((x) => x.id === id);
-      const modal = document.querySelector("#studentModal");
-      // modal.replaceChildren();
+      let modal = document.querySelector("#studentModal");
+	  console.log("asdfasdasdasdsdassdfad",student);
+    //   mdal.replaceChildren();
+    //   let modal = document.querySelector("#studentModal");
 
+	let modalBody = viewHelper.getElement("#studentModalBody");
+	modalBody.replaceChildren();
+
+	  
       let modalTitle = viewHelper.getElement("#studentModalLabel");
+	  modalTitle.replaceChildren();
       modalTitle.textContent = student.name;
 
       let classRow = this.createDataRow("Class", student.class);
       let majorRow = this.createDataRow("Major", student.major);
       let deleteRow = this.createDeleteRow(id);
 
-      let modalBody = viewHelper.getElement("#studentModalBody");
-      modalBody.replaceChildren();
+      
+      modalBody.append(classRow, majorRow, deleteRow);
 
+      let btnFooterClose = viewHelper.createElement("button", [
+        "btn",
+        "btn-primary",
+      ]);
+      btnFooterClose.setAttribute("type", "button");
+      btnFooterClose.setAttribute("data-dismiss", "modal");
+      btnFooterClose.textContent = "Close";
+      let modalFooter = viewHelper.getElement("#studentModalFooter");
+      modalFooter.replaceChildren();
+      modalFooter.append(btnFooterClose);
+    }
+	
+	
+	else if (modalToggle === "saveModalEdit") {
+      
+    //   let modal = document.querySelector("#studentModal");
+	  
+    //   mdal.replaceChildren();
+    //   let modal = document.querySelector("#studentModal");
+
+	let modalBody = viewHelper.getElement("#studentModalBody");
+	modalBody.replaceChildren();
+
+	  
+      let modalTitle = viewHelper.getElement("#studentModalLabel");
+	  modalTitle.replaceChildren();
+      modalTitle.textContent = inputName;
+
+      let classRow = this.createDataRow("Class", inputClass);
+      let majorRow = this.createDataRow("Major", inputMajor);
+      let deleteRow = this.createDeleteRow(id);
+
+      
       modalBody.append(classRow, majorRow, deleteRow);
 
       let btnFooterClose = viewHelper.createElement("button", [
@@ -506,99 +545,6 @@ class StudentView {
     const modal = document.querySelector("#studentModal");
     $(modal).modal("toggle");
   }
-
-  //   editStudentModal(id) {
-  //     let modalTitle = viewHelper.getElement("#studentModalLabel");
-  //     modalTitle.textContent = "Edit Student Modal";
-  //     console.log("student data in edit mode", this.studentData);
-
-  //     let findEdit = this.studentData.find((student) => student.id === id);
-
-  //     const nameTag = () => {
-  //       let row = viewHelper.createElement("div", ["form-group", "row"]);
-  //       let labelColumn = viewHelper.createElement("label", [
-  //         "col-sm-2",
-  //         "col-form-label",
-  //       ]);
-  //       labelColumn.textContent = "Name:";
-  //       let fieldColumn = viewHelper.createElement("input", ["col-sm-10"]);
-  //       // fieldColumn.setAttribute("class", "nameFieldTag")
-  //       fieldColumn.value = findEdit.name;
-
-  //       row.append(labelColumn, fieldColumn);
-  //       console.log("asdasd", findEdit);
-  //       return row;
-  //     };
-
-  //     const classTag = () => {
-  //       let row = viewHelper.createElement("div", ["form-group", "row"]);
-  //       let labelColumn = viewHelper.createElement("label", [
-  //         "col-sm-2",
-  //         "col-form-label",
-  //       ]);
-  //       labelColumn.textContent = "Class:";
-  //       let fieldColumn = viewHelper.createElement("input", ["col-sm-10"]);
-  //       fieldColumn.value = findEdit.class;
-
-  //       row.append(labelColumn, fieldColumn);
-  //       return row;
-  //     };
-
-  //     const majorTag = () => {
-  //       let row = viewHelper.createElement("div", ["form-group", "row"]);
-  //       let labelColumn = viewHelper.createElement("label", [
-  //         "col-sm-2",
-  //         "col-form-label",
-  //       ]);
-  //       labelColumn.textContent = "Major:";
-  //       let fieldColumn = viewHelper.createElement("input", ["col-sm-10"]);
-  //       fieldColumn.value = findEdit.major;
-
-  //       row.append(labelColumn, fieldColumn);
-
-  //       return row;
-  //     };
-
-  //     let nameRow = nameTag();
-  //     let classRow = classTag();
-  //     let majorRow = majorTag();
-  //     // let deleteRow = this.createDeleteRow(id);
-
-  //     let modalBody = viewHelper.getElement("#studentModalBody");
-  //     modalBody.replaceChildren();
-  //     modalBody.append(nameRow, classRow, majorRow);
-
-  //     // nameField.setAttribute("style", "border:2px solid red");
-
-  //     let btnFooterSave = viewHelper.createElement("button", [
-  //       "btn",
-  //       "btn-primary",
-  //     ]);
-  //     btnFooterSave.setAttribute("type", "button");
-
-  //     btnFooterSave.setAttribute("data-dismiss", "modal");
-  //     btnFooterSave.textContent = "Save";
-  //     btnFooterSave.setAttribute("onClick", `app.handleSaveToModal()`);
-
-  //     let modalFooter = viewHelper.getElement("#studentModalFooter");
-
-  //     let btnFooterCancel = viewHelper.createElement("button", ["btn"]);
-  //     btnFooterCancel.setAttribute("type", "button");
-  //     // btnFooterCancel.setAttribute("data-dismiss", "modal");
-  //     btnFooterCancel.textContent = "Cancel";
-  // 	btnFooterCancel.addEventListener("click", ()=>{
-  // 		modalToggle = false;
-  // 		modalToggle === false && modalTitle.setAttribute("style", "display:none") ;
-  // 		modalToggle === false && modalBody.setAttribute("style", "display:none") ;
-  // 		modalToggle === false && modalFooter.setAttribute("style", "display:none") ;
-  // 	})
-
-  //     modalFooter.replaceChildren();
-  //     modalFooter.append(btnFooterSave, btnFooterCancel);
-
-  // 	// const modal = document.querySelector("#studentModal");
-  //     // $(modal).modal("toggle");
-  //   }
 }
 
 class StudentController {
@@ -616,6 +562,12 @@ class StudentController {
     element.addEventListener("studentAdded", function (event) {
       app.handleStudentPost(event.detail);
     });
+    // element.addEventListener("studentUpdated", function (event) {
+    //   if(event.detail === "success"){
+	// 	modee.createStudentModal(event.id);
+	//   }
+    // });
+    
   }
 
   handleStudentData(student) {
@@ -625,7 +577,7 @@ class StudentController {
 
   handleCardClick(id) {
     console.log("modal " + id + " clicked");
-	modalToggle = true;
+    modalToggle = true;
     this.view.createStudentModal(id);
   }
 
@@ -643,6 +595,8 @@ class StudentController {
     const modal = document.querySelector("#studentModal");
     $("#studentModal").modal("toggle");
   }
+
+//   Calls getStudentData to update the UI
   handleStudentPost() {
     this.model.getStudentData();
   }
@@ -666,7 +620,6 @@ class StudentController {
   }
 
   handleSaveToModal(id) {
-    
     const updateObj = {
       id: id,
       name: inputName,
@@ -674,8 +627,17 @@ class StudentController {
       major: inputMajor,
     };
     this.model.updateStudentData(updateObj);
-	console.log("updating object", updateObj);
+
+    console.log("updating object", updateObj);
+
+	this.model.getStudentData();
+	
+	modalToggle = "saveModalEdit";
+
+    // setTimeout(() => this.view.createStudentModal, 800);
+    this.view.createStudentModal(id);
   }
+
 
   handleModalToggle(id) {
     modalToggle = false;
@@ -686,3 +648,4 @@ class StudentController {
 }
 
 const app = new StudentController(new StudentModel(), new StudentView());
+const modee = new StudentView();
