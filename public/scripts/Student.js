@@ -3,6 +3,7 @@ console.log("In Student.js");
 let inputName;
 let inputClass;
 let inputMajor;
+let modalToggle = false;
 
 class viewHelper {
   // Retrieve an element from the DOM
@@ -92,12 +93,16 @@ class StudentModel {
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
         console.log("sent obj to backend", obj);
-		const element = document.querySelector("#root");
+        const element = document.querySelector("#root");
         let event = new CustomEvent("studentAdded", { detail: "success" });
         element.dispatchEvent(event);
       }
     };
-    xhttp.open("POST", `http://localhost:3050/api/student/create/${obj.id}/${obj.name}/${obj.class}/${obj.major}`, true);
+    xhttp.open(
+      "POST",
+      `http://localhost:3050/api/student/create/${obj.id}/${obj.name}/${obj.class}/${obj.major}`,
+      true
+    );
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
   }
@@ -183,15 +188,19 @@ class StudentView {
 
   createStudentModal(id) {
     let student = this.studentData.find((x) => x.id === id);
+    const modal = document.querySelector("#studentModal");
+    // modal.replaceChildren();
+
     let modalTitle = viewHelper.getElement("#studentModalLabel");
     modalTitle.textContent = student.name;
 
-    let classRow = this.createDataRow("Class", student.class);
-    let majorRow = this.createDataRow("Major", student.major);
-    let deleteRow = this.createDeleteRow(id);
+    var classRow = this.createDataRow("Class", student.class);
+    var majorRow = this.createDataRow("Major", student.major);
+    var deleteRow = this.createDeleteRow(id);
 
     let modalBody = viewHelper.getElement("#studentModalBody");
     modalBody.replaceChildren();
+
     modalBody.append(classRow, majorRow, deleteRow);
 
     let btnFooterClose = viewHelper.createElement("button", [
@@ -205,7 +214,7 @@ class StudentView {
     modalFooter.replaceChildren();
     modalFooter.append(btnFooterClose);
 
-    const modal = document.querySelector("#studentModal");
+    // const modal = document.querySelector("#studentModal");
     $("#studentModal").modal("toggle");
   }
 
@@ -217,6 +226,7 @@ class StudentView {
     ]);
     labelColumn.textContent = label;
     let fieldColumn = viewHelper.createElement("div", ["col-sm-10"]);
+
     let fieldText = viewHelper.createElement("label", [
       "form-control-plaintext",
     ]);
@@ -234,12 +244,19 @@ class StudentView {
     ]);
     labelColumn.textContent = "";
     let fieldColumn = viewHelper.createElement("div", ["col-sm-10"]);
+    fieldColumn.setAttribute("style", "display:flex; gap:1rem");
 
     let button = viewHelper.createElement("button", ["btn", "btn-secondary"]);
+    button.setAttribute("style", "background-color:#FF0000");
     button.textContent = "Delete";
     button.setAttribute("onClick", `app.handleDeleteCard(${id})`);
 
-    fieldColumn.append(button);
+    let editBtn = viewHelper.createElement("button", ["btn", "btn-secondary"]);
+    // editBtn.setAttribute("data-toggle", "modal");
+    editBtn.textContent = "Edit";
+    editBtn.setAttribute("onClick", `app.handleModalToggle(${id})`);
+
+    fieldColumn.append(editBtn, button);
     row.append(labelColumn, fieldColumn);
     return row;
   }
@@ -252,6 +269,7 @@ class StudentView {
     ]);
     labelColumn.textContent = "Name:";
     let fieldColumn = viewHelper.createElement("input", ["col-sm-10"]);
+    // fieldColumn.setAttribute("class", "nameFieldTag")
     fieldColumn.addEventListener("change", (e) => (inputName = e.target.value));
 
     row.append(labelColumn, fieldColumn);
@@ -330,6 +348,93 @@ class StudentView {
     const modal = document.querySelector("#studentModal");
     $(modal).modal("toggle");
   }
+
+  editStudentModal(id) {
+    let modalTitle = viewHelper.getElement("#studentModalLabel");
+    modalTitle.textContent = "Edit Student Modal";
+    console.log("student data in edit mode", this.studentData);
+
+    // let formContainer = viewHelper.getElement("#formContainer");
+    let findEdit = this.studentData.find((student) => student.id === id);
+
+    const nameTag = () => {
+      let row = viewHelper.createElement("div", ["form-group", "row"]);
+      let labelColumn = viewHelper.createElement("label", [
+        "col-sm-2",
+        "col-form-label",
+      ]);
+      labelColumn.textContent = "Name:";
+      let fieldColumn = viewHelper.createElement("input", ["col-sm-10"]);
+      // fieldColumn.setAttribute("class", "nameFieldTag")
+      fieldColumn.value = findEdit.name;
+
+      row.append(labelColumn, fieldColumn);
+      console.log("asdasd", findEdit);
+      return row;
+    };
+
+    const classTag = () => {
+      let row = viewHelper.createElement("div", ["form-group", "row"]);
+      let labelColumn = viewHelper.createElement("label", [
+        "col-sm-2",
+        "col-form-label",
+      ]);
+      labelColumn.textContent = "Class:";
+      let fieldColumn = viewHelper.createElement("input", ["col-sm-10"]);
+      fieldColumn.value = findEdit.class;
+
+      row.append(labelColumn, fieldColumn);
+      return row;
+    };
+
+    const majorTag = () => {
+      let row = viewHelper.createElement("div", ["form-group", "row"]);
+      let labelColumn = viewHelper.createElement("label", [
+        "col-sm-2",
+        "col-form-label",
+      ]);
+      labelColumn.textContent = "Major:";
+      let fieldColumn = viewHelper.createElement("input", ["col-sm-10"]);
+      fieldColumn.value = findEdit.major;
+
+      row.append(labelColumn, fieldColumn);
+
+      return row;
+    };
+
+    let nameRow = nameTag();
+    let classRow = classTag();
+    let majorRow = majorTag();
+    // let deleteRow = this.createDeleteRow(id);
+
+    let modalBody = viewHelper.getElement("#studentModalBody");
+    modalBody.replaceChildren();
+    modalBody.append(nameRow, classRow, majorRow);
+
+    // nameField.setAttribute("style", "border:2px solid red");
+
+    let btnFooterSave = viewHelper.createElement("button", [
+      "btn",
+      "btn-primary",
+    ]);
+    btnFooterSave.setAttribute("type", "button");
+
+    btnFooterSave.setAttribute("data-dismiss", "modal");
+    btnFooterSave.textContent = "Save";
+    btnFooterSave.setAttribute("onClick", `app.handleSaveToModal()`);
+
+    let modalFooter = viewHelper.getElement("#studentModalFooter");
+
+    let btnFooterCancel = viewHelper.createElement("button", ["btn"]);
+    btnFooterCancel.setAttribute("type", "button");
+    btnFooterCancel.setAttribute("data-dismiss", "modal");
+    btnFooterCancel.textContent = "Cancel";
+    modalFooter.replaceChildren();
+    modalFooter.append(btnFooterSave, btnFooterCancel);
+
+    // const modal = document.querySelector("#studentModal");
+    // $(modal).modal("toggle");
+  }
 }
 
 class StudentController {
@@ -350,7 +455,7 @@ class StudentController {
   }
 
   handleStudentData(student) {
-    console.log("create view");
+    console.log("create view", student);
     this.view.createView(student);
   }
 
@@ -388,6 +493,15 @@ class StudentController {
     this.model.sendStudentData(newObj);
 
     // console.log(newObj);
+  }
+
+  handleSaveToModal() {}
+
+  handleModalToggle(id) {
+    modalToggle = !modalToggle;
+    //   this.view.createStudentModal(id);
+    this.view.editStudentModal(id);
+    console.log("what is modalToggle?", modalToggle);
   }
 }
 
