@@ -57,6 +57,9 @@ class StudentModel {
 		//hardcoded to 5.
 
 		let students = this.studentList;
+		console.log("page parameters at the backend", pageParameters)
+
+		// this.getPagedStudents(students, pageParameters);
 
 		let studentsSorted = this.getSortedStudents(students, sortParameters);
 
@@ -106,6 +109,7 @@ class StudentModel {
 
 
 	getPagedStudents(students, pageParameters) {
+		console.log("students in the getPaged students", students);
 		// Assume the first page is page 1, not 0.
 		let firstRecordOfPage = (pageParameters.page - 1) * pageParameters.pageSize;
 		let lastRecordOfPage = pageParameters.page * pageParameters.pageSize
