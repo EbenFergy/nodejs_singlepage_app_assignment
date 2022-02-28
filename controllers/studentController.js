@@ -7,7 +7,7 @@ const path = require("path");
 
 // Display list of all students.
 exports.student_list = function(req, res) {
-
+    console.log("request in the student_List controller", req.query);
     try{
         pageParameters = RequestHelper.readPageParameters(req.query);
         filterParameters = RequestHelper.readFilterParameters(req.query);

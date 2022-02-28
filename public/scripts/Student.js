@@ -68,15 +68,16 @@ class StudentModel {
       }
     }
     let filterquery = "";
-    // if (this.filterParameters) {
-    //   if (this.filterParameters.major && this.filterParameters.class) {
-    //     filterquery = `major=${this.filterParameters.major}&class=${this.filterParameters.class}`;
-    //   } else if (this.filterParameters.major) {
-    //     filterquery = `major=${this.filterParameters.major}`;
-    //   } else {
-    //     filterquery = `class=${this.filterParameters.class}`;
-    //   }
-    // }
+    if (this.filterParameters) {
+      if (this.filterParameters.major || this.filterParameters.class) {
+        console.log("major length", this.filterParameters.major.length);
+        console.log("class length", this.filterParameters.class.length);
+
+		this.filterParameters.major.length > 0 && this.filterParameters.class.length === 0 ? filterquery = `major=${this.filterParameters.major}`:
+		this.filterParameters.major.length === 0 && this.filterParameters.class.length > 0 ? filterquery = `class=${this.filterParameters.class}`:
+		filterquery = `major=${this.filterParameters.major}&class=${this.filterParameters.class}`;
+      }
+    }
 
     let sortquery = "";
     if (this.sortParameters) {
