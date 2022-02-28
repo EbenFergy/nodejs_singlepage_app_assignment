@@ -25,7 +25,7 @@ class StudentModel {
   initialize() {
     this.filterParameters = {};
     this.sortParameters = {};
-    this.pageParameters = { page: 1, pagesize: 4 };
+    this.pageParameters = { page: 1, pagesize: 6 };
     this.getStudentData();
   }
 
@@ -73,9 +73,13 @@ class StudentModel {
         console.log("major length", this.filterParameters.major.length);
         console.log("class length", this.filterParameters.class.length);
 
-		this.filterParameters.major.length > 0 && this.filterParameters.class.length === 0 ? filterquery = `major=${this.filterParameters.major}`:
-		this.filterParameters.major.length === 0 && this.filterParameters.class.length > 0 ? filterquery = `class=${this.filterParameters.class}`:
-		filterquery = `major=${this.filterParameters.major}&class=${this.filterParameters.class}`;
+        this.filterParameters.major.length > 0 &&
+        this.filterParameters.class.length === 0
+          ? (filterquery = `major=${this.filterParameters.major}`)
+          : this.filterParameters.major.length === 0 &&
+            this.filterParameters.class.length > 0
+          ? (filterquery = `class=${this.filterParameters.class}`)
+          : (filterquery = `major=${this.filterParameters.major}&class=${this.filterParameters.class}`);
       }
     }
 

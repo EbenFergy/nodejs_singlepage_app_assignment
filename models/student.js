@@ -36,7 +36,12 @@ class StudentModel {
         major: "Engineering",
       },
 
-      { id: 10, name: "Brad Hammond", class: "Sophomore", major: "Engineering" },
+      {
+        id: 10,
+        name: "Brad Hammond",
+        class: "Sophomore",
+        major: "Engineering",
+      },
       { id: 11, name: "Dana Agapescu", class: "Senior", major: "Biology" },
       {
         id: 12,
@@ -102,18 +107,20 @@ class StudentModel {
       filterParameters
     );
     //The totalpages parameter is hard coded to 5, but this is incorrect.
-    response.pageparameters.totalpages;
+    response.pageparameters.totalpages = Math.ceil(
+      studentsSorted.length / pageParameters.pageSize
+    );
 
-    if (studentsSorted.length % 4 === 0) {
-      response.pageparameters.totalpages = studentsSorted.length / 4;
-    } else if (studentsSorted.length % 4 === 1) {
-      response.pageparameters.totalpages =
-        Math.round(studentsSorted.length / 4) + 1;
-    } else if (studentsSorted.length % 4 > 1) {
-      response.pageparameters.totalpages = Math.round(
-        studentsSorted.length / 4
-      );
-    }
+    // if (studentsSorted.length % 4 === 0) {
+    //   response.pageparameters.totalpages = studentsSorted.length / 4;
+    // } else if (studentsSorted.length % 4 === 1) {
+    //   response.pageparameters.totalpages =
+    //     Math.round(studentsSorted.length / 4) + 1;
+    // } else if (studentsSorted.length % 4 > 1) {
+    //   response.pageparameters.totalpages = Math.round(
+    //     studentsSorted.length / 4
+    //   );
+    // }
 
     console.log("page size", response.pageparameters.totalpages);
 
