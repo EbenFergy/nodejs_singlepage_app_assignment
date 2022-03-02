@@ -25,7 +25,7 @@ class StudentModel {
   initialize() {
     this.filterParameters = {};
     this.sortParameters = {};
-    this.pageParameters = { page: 1, pagesize: 6 };
+    this.pageParameters = { page: 1, pagesize: 4 };
     this.getStudentData();
   }
 
