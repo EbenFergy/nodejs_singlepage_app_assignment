@@ -40,6 +40,7 @@ class StudentDomainObject {
         if (jsonObject.major != null)
             this.studentObject.major = jsonObject.major;
 
+
     }
     
 }

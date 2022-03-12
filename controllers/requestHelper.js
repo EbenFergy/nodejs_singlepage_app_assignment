@@ -18,12 +18,17 @@ class RequestHelper {
 	}
 
 	static readFilterParameters(req) {
+        
 
         let filterParameters = {};
         if (req.class)
             filterParameters.class = req.class;
         if (req.major)
             filterParameters.major = req.major;
+        if (req.minGPA)
+            filterParameters.minGPA = req.minGPA;
+        if (req.maxGPA)
+            filterParameters.maxGPA = req.maxGPA;
 
 		return filterParameters;
 	}

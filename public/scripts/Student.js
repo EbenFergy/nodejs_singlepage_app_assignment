@@ -29,12 +29,8 @@ class StudentModel {
     this.getStudentData();
   }
 
-  getNextPage() {
-    this.pageParameters.page++;
-    this.getStudentData();
-  }
-  getPrevPage() {
-    this.pageParameters.page--;
+  getPage(page) {
+    this.pageParameters.page = page;
     this.getStudentData();
   }
 
@@ -52,37 +48,29 @@ class StudentModel {
         element.dispatchEvent(event);
       }
     };
-    console.log("yoooo");
-    console.log(this.sortParameters);
-    console.log(this.pageParameters);
-    console.log(this.filterParameters);
 
-    let pagequery = "";
-    if (this.pageParameters) {
-      if (this.pageParameters.page) {
-        if (this.pageParameters.pagesize) {
-          pagequery = `page=${this.pageParameters.page}&pagesize=${this.pageParameters.pagesize}`;
-        } else {
-          pagequery = `page=${this.pageParameters.page}`;
-        }
-      }
-    }
+    let pagequery = `page=${this.pageParameters.page}&pagesize=${this.pageParameters.pagesize}`;
     let filterquery = "";
     if (this.filterParameters) {
-      if (this.filterParameters.major || this.filterParameters.class) {
-        console.log("major length", this.filterParameters.major.length);
-        console.log("class length", this.filterParameters.class.length);
-
-        this.filterParameters.major.length > 0 &&
-        this.filterParameters.class.length === 0
-          ? (filterquery = `major=${this.filterParameters.major}`)
-          : this.filterParameters.major.length === 0 &&
-            this.filterParameters.class.length > 0
-          ? (filterquery = `class=${this.filterParameters.class}`)
-          : (filterquery = `major=${this.filterParameters.major}&class=${this.filterParameters.class}`);
+      if (this.filterParameters.class) {
+        filterquery = filterquery + `class=${this.filterParameters.class}`;
+      }
+      if (this.filterParameters.major) {
+        filterquery =
+          (filterquery ? filterquery + "&" : "") +
+          `major=${this.filterParameters.major}`;
+      }
+      if (this.filterParameters.minGPA) {
+        filterquery =
+          (filterquery ? filterquery + "&" : "") +
+          `minGPA=${this.filterParameters.minGPA}`;
+      }
+      if (this.filterParameters.maxGPA) {
+        filterquery =
+          (filterquery ? filterquery + "&" : "") +
+          `maxGPA=${this.filterParameters.maxGPA}`;
       }
     }
-
     let sortquery = "";
     if (this.sortParameters) {
       if (this.sortParameters.sortby) {
@@ -93,13 +81,13 @@ class StudentModel {
         }
       }
     }
+
     let query =
-      (pagequery ? pagequery : "") +
+      pagequery +
       (filterquery ? "&" + filterquery : "") +
       (sortquery ? "&" + sortquery : "");
 
     let url = `http://localhost:3050/api/students?${query}`;
-    console.log("URL here I am", url);
 
     xhttp.open("GET", url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
@@ -135,13 +123,17 @@ class StudentModel {
       if (this.readyState == 4 && (this.status == 200 || this.status == 201)) {
         console.log(this.responseText);
         const element = document.querySelector("#root");
-        let data = { response: this.responseText };
-        let event = new CustomEvent("StudentAdded", { detail: data });
+        let data = { response: JSON.parse(this.responseText) };
+        let event;
+
+        if (id) event = new CustomEvent("StudentEditted", { detail: data });
+        else event = new CustomEvent("StudentAdded", { detail: data });
         element.dispatchEvent(event);
       }
     };
 
     let url;
+
     if (id) url = `http://localhost:3050/api/students/${id}`;
     else url = `http://localhost:3050/api/students/`;
 
@@ -182,28 +174,89 @@ class StudentView {
     this.studentData = studentResponse.data;
     this.pageParameters = studentResponse.pageparameters;
     this.sortParameters = studentResponse.sortparameters;
-    this.filterParameters = studentResponse.filterParameters;
+    this.filterParameters = studentResponse.filterparameters;
 
     this.app = viewHelper.getElement("#root");
     this.app.replaceChildren();
 
+    console.log("filter parameters at the front end", this.filterParameters);
+
     let title = this.createTitle();
+    let pillRow = viewHelper.createElement("div", ["pillStyle"]);
     let cards = this.createCards();
     let footer = this.createFooter();
 
     let container = viewHelper.createElement("div", ["container"]);
-    container.append(title, cards, footer);
+    container.append(title, pillRow, cards, footer);
+
+    if (this.sortParameters) {
+      console.log("sort parameters at the front end", this.sortParameters);
+      let sortPillTag = viewHelper.createElement("div", ["pillStyle"]);
+      sortPillTag.textContent = "Sort:";
+      for (const parameters in this.sortParameters) {
+        let createdPill = this.createPill(
+          `${parameters} = ${this.sortParameters[parameters]}`
+        );
+        sortPillTag.append(createdPill);
+      }
+      pillRow.append(sortPillTag);
+    }
+
+    if (Object.keys(this.filterParameters).length > 0) {
+      let filterPillTag = viewHelper.createElement("div", ["pillStyle"]);
+      filterPillTag.textContent = "Filter:";
+
+      if (this.filterParameters.class) {
+        let createdPill = this.createPill(
+          `class = ${this.filterParameters.class}`
+        );
+        filterPillTag.append(createdPill);
+      }
+      if (this.filterParameters.major) {
+        let createdPill = this.createPill(
+          `major = ${this.filterParameters.major}`
+        );
+        filterPillTag.append(createdPill);
+      }
+      if (this.filterParameters.minGPA) {
+        let createdPill = this.createPill(
+          `minGPA >= ${this.filterParameters.minGPA}`
+        );
+        filterPillTag.append(createdPill);
+      }
+      if (this.filterParameters.maxGPA) {
+        let createdPill = this.createPill(
+          `maxGPA <= ${this.filterParameters.maxGPA}`
+        );
+        filterPillTag.append(createdPill);
+      }
+      pillRow.append(filterPillTag);
+    }
 
     this.app.append(container);
   }
 
+  createPill(text) {
+    let pillTemplate = `<span class="badge badge-primary pillPadding">${text}</span>`;
+    let pill = document.createElement("div");
+    pill.innerHTML = pillTemplate;
+    return pill;
+  }
+
   createTitle() {
     let titleTemplate =
-      '<div class = "title ht-4 mb-4 d-flex"> ' +
+      '<div class = "title ht-4 mb-2 d-flex"> ' +
       "<h3>Students</h3>" +
       '<div class="ml-auto">' +
-      '<button class="btn btn-outline-secondary" type="button" onClick="app.handleFilterClick()">Filter</button>' +
-      '<button class="btn btn-outline-secondary ml-2" type="button" onClick="app.handleAddCardClick()">Add</button>' +
+      '<button  class="btn btn-outline-secondary buttonStyle" type="button" onClick="app.handleFilterClick()">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel" 	viewBox="0 0 16 16"	>' +
+      '<path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2zm1 .5v1.308l4.372 4.858A.5.5 0 0 1 7 8.5v5.306l2-.666V8.5a.5.5 0 0 1 .128-.334L13.5 3.308V2h-11z"/>' +
+      "</svg>" +
+      "</button>" +
+      '<button class="btn btn-outline-secondary ml-2 buttonStyle" type="button" onClick="app.handleAddCardClick()">'+
+	  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">'+
+	  '<path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>'+
+	'</svg></button>' +
       "</div>" +
       "</div>";
     let title = document.createElement("div");
@@ -212,26 +265,34 @@ class StudentView {
   }
 
   createFooter() {
+    let footer = document.createElement("div");
+    footer.innerHTML = this.createSimplePager();
+    return footer;
+  }
+
+  createSimplePager() {
     let prevButtonDisabled = "";
     let nextButtonDisabled = '"';
     if (Number(this.pageParameters.currentpage) == 1) {
       prevButtonDisabled = 'disabled = "true"';
     }
     if (
-      Number(this.pageParameters.currentpage) ==
+      Number(this.pageParameters.currentpage) >=
       Number(this.pageParameters.totalpages)
     ) {
       nextButtonDisabled = 'disabled = "true"';
     }
 
-    let titleTemplate =
+    let pagerTemplate =
       '<div class = "ht-4 mt-4 d-flex"> ' +
-      `<div> <button class="btn btn-outline-secondary" type="button" onClick="app.handlePrevPageClick()" ${prevButtonDisabled}>previous page</button> </div>` +
-      `<div class="ml-auto"> <button class="btn btn-outline-secondary" type="button" onClick="app.handleNextPageClick()" ${nextButtonDisabled}>next page</button> </div>` +
+      `<div> <button class="btn btn-outline-secondary" type="button" onClick="app.handleChangePage(${
+        Number(this.pageParameters.currentpage) - 1
+      })" ${prevButtonDisabled}>previous page</button> </div>` +
+      `<div class="ml-auto"> <button class="btn btn-outline-secondary" type="button" onClick="app.handleChangePage(${
+        Number(this.pageParameters.currentpage) + 1
+      })" ${nextButtonDisabled}>next page</button> </div>` +
       "</div>";
-    let title = document.createElement("div");
-    title.innerHTML = titleTemplate;
-    return title;
+    return pagerTemplate;
   }
 
   createCards() {
@@ -246,7 +307,7 @@ class StudentView {
       let cardTitle = viewHelper.createElement("div", ["card-title"]);
       cardTitle.textContent = student.name;
       let cardText = viewHelper.createElement("p", ["card-text"]);
-      cardText.textContent = student.class;
+      cardText.textContent = student.GPA;
 
       cardBody.append(cardTitle, cardText);
       card.append(cardBody);
@@ -268,10 +329,11 @@ class StudentView {
 
     let classRow = this.createDataRow("Class", student.class);
     let majorRow = this.createDataRow("Major", student.major);
+    let GPARow = this.createDataRow("GPA", student.GPA);
 
     let modalBody = viewHelper.getElement("#studentModalBody");
     modalBody.replaceChildren();
-    modalBody.append(classRow, majorRow);
+    modalBody.append(classRow, majorRow, GPARow);
 
     let btnFooterClose = viewHelper.createElement("button", [
       "btn",
@@ -334,10 +396,11 @@ class StudentView {
     let nameRow = this.createInputRow("Name", "name", student.name);
     let classRow = this.createInputRow("Class", "class", student.class);
     let majorRow = this.createInputRow("Major", "major", student.major);
+    let GPARow = this.createDataRow("GPA", student.GPA);
 
     let modalBody = viewHelper.getElement("#studentModalBody");
     modalBody.replaceChildren();
-    modalBody.append(nameRow, classRow, majorRow);
+    modalBody.append(nameRow, classRow, majorRow, GPARow);
 
     let btnFooterSave = viewHelper.createElement("button", [
       "btn",
@@ -368,18 +431,49 @@ class StudentView {
     let modalButtons = viewHelper.getElement("#studentModalbuttons");
     modalButtons.replaceChildren();
 
+    let classValue = this.filterParameters.class
+      ? this.filterParameters.class
+      : "";
+    let majorValue = this.filterParameters.major
+      ? this.filterParameters.major
+      : "";
     let sortByValue = this.sortParameters.sortby
       ? this.sortParameters.sortby
       : "";
     let sortOrderValue = this.sortParameters.sortorder
       ? this.sortParameters.sortorder
       : "";
-    let filterMajorValue = this.sortParameters.filterMajor
-      ? this.sortParameters.filterMajor
-      : "";
-    let filterClassValue = this.sortParameters.filterClass
-      ? this.sortParameters.filterClass
-      : "";
+
+    let classOptions = [
+      { name: "", value: "" },
+      { name: "Senior", value: "senior" },
+      { name: "Junior", value: "junior" },
+      { name: "Sophmore", value: "sophmore" },
+      { name: "Freshman", value: "freshman" },
+    ];
+    let majorOptions = [
+      { name: "", value: "" },
+      { name: "Art", value: "art" },
+      { name: "Biology", value: "biology" },
+      { name: "Computer Science", value: "computer science" },
+      { name: "Engineering", value: "engineering" },
+    ];
+
+    let minGPA = [
+      { name: "", value: "" },
+      { name: 2.0, value: 2.0 },
+      { name: 2.5, value: 2.5 },
+      { name: 3.0, value: 3.0 },
+      { name: 4.0, value: 4.0 },
+    ];
+
+    let maxGPA = [
+      { name: "", value: "" },
+      { name: 2.0, value: 2.0 },
+      { name: 2.5, value: 2.5 },
+      { name: 3.0, value: 3.0 },
+      { name: 4.0, value: 4.0 },
+    ];
 
     let sortByOptions = [
       { name: "", value: "" },
@@ -393,21 +487,31 @@ class StudentView {
       { name: "Ascending", value: "asc" },
       { name: "Descending", value: "desc" },
     ];
-    let filterMajorOptions = [
-      { name: "", value: "" },
-      { name: "Art", value: "art" },
-      { name: "Biology", value: "biology" },
-      { name: "Computer Science", value: "computer+science" },
-      { name: "Engineering", value: "engineering" },
-    ];
-    let filterClassOptions = [
-      { name: "", value: "" },
-      { name: "Freshman", value: "freshman" },
-      { name: "Sophomore", value: "sophomore" },
-      { name: "Junior", value: "junior" },
-      { name: "Senior", value: "senior" },
-    ];
 
+    let classRow = this.createSelectRow(
+      "Class",
+      "filterClass",
+      classValue,
+      classOptions
+    );
+    let majorRow = this.createSelectRow(
+      "Major",
+      "filterMajor",
+      majorValue,
+      majorOptions
+    );
+    let minGPARow = this.createSelectRow(
+      "Min GPA",
+      "filterMinGPA",
+      majorValue,
+      minGPA
+    );
+    let maxGPARow = this.createSelectRow(
+      "Max GPA",
+      "filterMaxGPA",
+      majorValue,
+      maxGPA
+    );
     let sortByRow = this.createSelectRow(
       "Sort By",
       "sortBy",
@@ -420,22 +524,17 @@ class StudentView {
       sortOrderValue,
       sortOrderOptions
     );
-    let filterMajorRow = this.createSelectRow(
-      "Major",
-      "filterMajor",
-      filterMajorValue,
-      filterMajorOptions
-    );
-    let filterClassRow = this.createSelectRow(
-      "Class",
-      "filterClass",
-      filterClassValue,
-      filterClassOptions
-    );
 
     let modalBody = viewHelper.getElement("#studentModalBody");
     modalBody.replaceChildren();
-    modalBody.append(sortByRow, sortOrderRow, filterMajorRow, filterClassRow);
+    modalBody.append(
+      classRow,
+      majorRow,
+      minGPARow,
+      maxGPARow,
+      sortByRow,
+      sortOrderRow
+    );
 
     let btnFooterApply = viewHelper.createElement("button", [
       "btn",
@@ -554,13 +653,17 @@ class StudentController {
       app.handleStudentDeleted(event.detail);
     });
     element.addEventListener("StudentAdded", function (event) {
-      console.log("in event listener");
       app.handleStudentAdded(event.detail);
+    });
+    element.addEventListener("StudentEditted", function (event) {
+      app.handleStudentEditted(event.detail);
     });
   }
 
   handleStudentData(studentResponse) {
     console.log("create view");
+    console.log("student Response", studentResponse);
+
     this.view.createView(studentResponse);
   }
 
@@ -585,10 +688,12 @@ class StudentController {
   }
 
   handleStudentAdded(data) {
-    console.log(data);
-
     this.model.getStudentData();
+    $("#studentModal").modal("toggle");
+  }
 
+  handleStudentEditted(data) {
+    this.model.getStudentData();
     $("#studentModal").modal("toggle");
   }
 
@@ -599,6 +704,7 @@ class StudentController {
 
   handleStudentDeleted(data) {
     console.log(data);
+
     this.model.getStudentData();
     $("#studentModal").modal("toggle");
   }
@@ -608,30 +714,33 @@ class StudentController {
     this.view.createEditStudentModal(id);
   }
 
-  handleNextPageClick() {
-    this.model.getNextPage();
+  handleChangePage(page) {
+    this.model.getPage(page);
   }
-  handlePrevPageClick() {
-    this.model.getPrevPage();
-  }
+
   handleFilterClick() {
     this.view.createFilterModal();
   }
 
   handleApplyFilters() {
-    let sortBy = document.getElementById("sortBy").value;
-    let sortOrder = document.getElementById("sortOrder").value;
-    let filterMajor = document.getElementById("filterMajor").value;
     let filterClass = document.getElementById("filterClass").value;
+    let filterMajor = document.getElementById("filterMajor").value;
+    let filterMinGPA = document.getElementById("filterMinGPA").value;
+    let filterMaxGPA = document.getElementById("filterMaxGPA").value;
 
-    let sortParameters = { sortby: sortBy, sortorder: sortOrder };
     let filterParameters = {
-      major: filterMajor,
       class: filterClass,
+      major: filterMajor,
+      minGPA: filterMinGPA,
+      maxGPA: filterMaxGPA,
     };
 
-    this.model.sortParameters = sortParameters;
+    let sortBy = document.getElementById("sortBy").value;
+    let sortOrder = document.getElementById("sortOrder").value;
+    let sortParameters = { sortby: sortBy, sortorder: sortOrder };
+
     this.model.filterParameters = filterParameters;
+    this.model.sortParameters = sortParameters;
 
     this.model.getStudentData();
     $("#studentModal").modal("toggle");

@@ -7,7 +7,6 @@ const path = require("path");
 
 // Display list of all students.
 exports.student_list = function(req, res) {
-    console.log("request in the student_List controller", req.query);
     try{
         pageParameters = RequestHelper.readPageParameters(req.query);
         filterParameters = RequestHelper.readFilterParameters(req.query);
@@ -59,9 +58,11 @@ exports.student_create_post = function(req, res) {
         res.status(400);
     } else { 
         try{
+            console.log(req.body);
             student = this.studentModel.createStudent(req.body);
             result = {success: 'true', data: student}
             res.status(201);
+
         } catch (ex) {      
             console.log(ex);
             result = {success: 'false', errorMessages: ex}
@@ -78,6 +79,8 @@ exports.student_update_post = function(req, res) {
         res.status(400);
     } else { 
         try{
+
+            console.log(req.body);
             student = this.studentModel.updateStudent(req.params.id, req.body);
             result = {success: 'true', data: student}
         } catch (ex) {      

@@ -25,23 +25,17 @@ class StudentModel {
         class: "Senior",
         major: "Computer Science",
       },
-      { id: 5, name: "Adrian Goodchild", class: "Sophomore", major: "Art" },
+      { id: 5, name: "Adrian Goodchild", class: "Sophmore", major: "Art" },
       { id: 6, name: "Dave Payne", class: "Freshman", major: "Biology" },
       { id: 7, name: "Amy Gregory", class: "Freshman", major: "Biology" },
       { id: 8, name: "Kristi Schaffer", class: "Senior", major: "Engineering" },
       {
         id: 9,
         name: "Kaitlun Peterson",
-        class: "Sophomore",
+        class: "Sophmore",
         major: "Engineering",
       },
-
-      {
-        id: 10,
-        name: "Brad Hammond",
-        class: "Sophomore",
-        major: "Engineering",
-      },
+      { id: 10, name: "Brad Hammond", class: "Sophmore", major: "Engineering" },
       { id: 11, name: "Dana Agapescu", class: "Senior", major: "Biology" },
       {
         id: 12,
@@ -61,7 +55,10 @@ class StudentModel {
         class: "Freshman",
         major: "Computer Science",
       },
-    ];
+    ].map((student) => {
+      student.GPA = this.getRandomGPA();
+      return student;
+    });
 
     this.nextId = this.studentList.length;
   }
@@ -71,56 +68,62 @@ class StudentModel {
     return this.nextId;
   }
 
+  
+  getRandomGPA() {
+    let minGPA = 2.0;
+    let maxGPA = 4.0;
+    let decimalPoints = 2;
+
+    //Get a random number between 200 and 400
+    let maxRandom = maxGPA * 10 ** decimalPoints;
+    let minRandom = minGPA * 10 ** decimalPoints;
+    let rndNumber = Math.floor(
+      Math.random() * (maxRandom - minRandom) + minRandom
+    );
+
+    //Divide the rndNumber by the number of decimal points.
+    return rndNumber / 10 ** decimalPoints;
+  }
+
   //return all students
   getAllStudents() {
+	  
     return this.studentList;
   }
 
+
+  
+
   getStudents(sortParameters, pageParameters, filterParameters) {
-    //
-    //Currently this method returns the complete list of students and ignores the sort,
-    //page and filter parameters.
-    //
-    //This method needs to handle the sort, page, and filter, parameters properly.  Notice
-    //there are methods for each below.
-    //
-    //The response should include the total number pages based on the filter and page parameters
-    //so the paging control on the front end works properly. Note that this is currently
-    //hardcoded to 5.
-
-    let students = this.studentList;
-    // console.log("page parameters at the backend", pageParameters);
-    console.log("filter parameters at the backend", filterParameters);
-
-    let studentsFiltered = this.getFilteredStudents(students, filterParameters);
-    // console.log("getFiltered parameters at the backend", filterParameters);
+	
+    let studentsFiltered = this.getFilteredStudents(
+      this.studentList,
+      filterParameters
+    );
     let studentsSorted = this.getSortedStudents(
       studentsFiltered,
       sortParameters
     );
-    let pagedStudents = this.getPagedStudents(studentsSorted, pageParameters);
-    // console.log("response to front end", pagedStudents);
+    let studentsPaged = this.getPagedStudents(studentsSorted, pageParameters);
+
+    //Contains the number of filtered and sorted records before paging.
+    let totalRecords = studentsFiltered.length;
 
     let response = ResponseHelper.createResponse(
+      totalRecords,
       sortParameters,
       pageParameters,
       filterParameters
     );
-    //The totalpages parameter is hard coded to 5, but this is incorrect.
-    response.pageparameters.totalpages = Math.ceil(
-      studentsSorted.length / pageParameters.pageSize
-    );
-
-    console.log("page size", response.pageparameters.totalpages);
-
-    response.data = pagedStudents;
+    response.data = studentsPaged;
 
     return response;
   }
 
   getFilteredStudents(students, filterParameters) {
-    console.log("students inside in getFilteredStudents", students);
-    console.log("filter parameter in getFilteredStudents", filterParameters);
+	// console.log("filter parameters in getFilteredStudents", filterParameters);
+	
+
     //if there are no filterParameters, skip this method
     if (!filterParameters) return students;
 
@@ -137,8 +140,19 @@ class StudentModel {
           student.major.toLowerCase() == filterParameters.major.toLowerCase()
         );
       });
-
-    console.log("Output from filter", students);
+    if (filterParameters.minGPA)
+      students = students.filter( (student) =>{
+        
+		// console.log("student GPAs", student.GPA);
+		  return student.GPA >= filterParameters.minGPA
+        
+      });
+    if (filterParameters.maxGPA)
+      students = students.filter( (student) =>{
+        
+		  return student.GPA <= filterParameters.maxGPA
+        
+      });
 
     return students;
   }
@@ -171,21 +185,16 @@ class StudentModel {
           ? -1
           : 0
       );
-    console.log("output from sorting", students);
+
     return students;
   }
 
   getPagedStudents(students, pageParameters) {
-    // console.log("students in the getPaged students", students);
     // Assume the first page is page 1, not 0.
     let firstRecordOfPage = (pageParameters.page - 1) * pageParameters.pageSize;
     let lastRecordOfPage = pageParameters.page * pageParameters.pageSize;
     //myArray.slice(param1, param2)
     //  will return the subset of mySrray starting at param1 and ending at param2
-    console.log(
-      "list of sliced students per page",
-      students.slice(firstRecordOfPage, lastRecordOfPage)
-    );
     return students.slice(firstRecordOfPage, lastRecordOfPage);
   }
 
@@ -195,7 +204,7 @@ class StudentModel {
       return student.id == sid;
     });
 
-    if (!student) throw "No student with this id";
+    if (!student) throw ["No student with this id"];
 
     return student;
   }
@@ -211,6 +220,10 @@ class StudentModel {
   }
 
   createStudent(requestObject) {
+    console.log(
+      "student.js/model **passing new student data to be created",
+      requestObject
+    );
     //Use the StudentDomainObject to validate the student
     let isInsert = true;
     let studentObject = new StudentDomainObject(requestObject, isInsert);
@@ -219,14 +232,17 @@ class StudentModel {
     //Get the validatedStudent
     let validatedStudent = studentObject.student();
 
+    console.log("student.js/model **validated student", requestObject);
     //Use the validatedStudent to set the newStudent
     let newStudent = {
       id: this.reserveAndGetNextId(),
       name: validatedStudent.name,
       class: validatedStudent.class,
       major: validatedStudent.major,
+	  GPA: this.getRandomGPA()
     };
     this.studentList.push(newStudent);
+    console.log("student lisisisis", this.studentList);
 
     return newStudent;
   }
@@ -245,7 +261,7 @@ class StudentModel {
       return student.id == sid;
     });
 
-    if (!student) throw "No student with this id";
+    if (!student) throw ["No student with this id"];
 
     if (validatedStudent.name) student.name = validatedStudent.name;
     if (validatedStudent.class != null) student.class = validatedStudent.class;
