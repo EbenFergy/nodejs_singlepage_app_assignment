@@ -17,7 +17,7 @@ class viewHelper {
   }
 }
 
-class StudentModel {
+class ProfessorModel {
   constructor() {
     this.initialize();
   }
@@ -26,24 +26,24 @@ class StudentModel {
     this.filterParameters = {};
     this.sortParameters = {};
     this.pageParameters = { page: 1, pagesize: 4 };
-    this.getStudentData();
+    this.getProfessorData();
   }
 
   getPage(page) {
     this.pageParameters.page = page;
-    this.getStudentData();
+    this.getProfessorData();
   }
 
-  getStudentData() {
-    console.log("In GetStudent()");
+  getProfessorData() {
+    console.log("In GetProfessor()");
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
         console.log(this.responseText);
-        this.studentResponse = JSON.parse(this.responseText);
+        this.professorResponse = JSON.parse(this.responseText);
         const element = document.querySelector("#root");
-        let event = new CustomEvent("GetStudentData", {
-          detail: this.studentResponse,
+        let event = new CustomEvent("GetProfessorData", {
+          detail: this.professorResponse,
         });
         element.dispatchEvent(event);
       }
@@ -52,28 +52,18 @@ class StudentModel {
     let pagequery = `page=${this.pageParameters.page}&pagesize=${this.pageParameters.pagesize}`;
     let filterquery = "";
     if (this.filterParameters) {
-      if (this.filterParameters.class) {
-        filterquery = filterquery + `class=${this.filterParameters.class}`;
+      if (this.filterParameters.title) {
+        filterquery = filterquery + `title=${this.filterParameters.title}`;
       }
-      if (this.filterParameters.major) {
+      if (this.filterParameters.department) {
         filterquery =
           (filterquery ? filterquery + "&" : "") +
-          `major=${this.filterParameters.major}`;
+          `department=${this.filterParameters.department}`;
       }
       if (this.filterParameters.namesearch) {
         filterquery =
           (filterquery ? filterquery + "&" : "") +
           `namesearch=${this.filterParameters.namesearch}`;
-      }
-      if (this.filterParameters.gpamin) {
-        filterquery =
-          (filterquery ? filterquery + "&" : "") +
-          `gpamin=${this.filterParameters.gpamin}`;
-      }
-      if (this.filterParameters.gpamax) {
-        filterquery =
-          (filterquery ? filterquery + "&" : "") +
-          `gpamax=${this.filterParameters.gpamax}`;
       }
     }
 
@@ -93,22 +83,22 @@ class StudentModel {
       (filterquery ? "&" + filterquery : "") +
       (sortquery ? "&" + sortquery : "");
 
-    let url = `http://localhost:3050/api/students?${query}`;
+    let url = `http://localhost:3050/api/professors?${query}`;
 
     xhttp.open("GET", url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
   }
 
-  deleteStudent(id) {
-    console.log("In DeleteStudent()");
+  deleteProfessor(id) {
+    console.log("In DeleteProfessor()");
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
         console.log(this.responseText);
         const element = document.querySelector("#root");
-        let data = { response: this.responseText, studentid: id };
-        let event = new CustomEvent("StudentDeleted", { detail: data });
+        let data = { response: this.responseText, professorid: id };
+        let event = new CustomEvent("ProfessorDeleted", { detail: data });
         element.dispatchEvent(event);
       }
       if (this.readyState == 4 && this.status == 400) {
@@ -125,15 +115,15 @@ class StudentModel {
       }
     };
 
-    let url = `http://localhost:3050/api/students/${id}`;
+    let url = `http://localhost:3050/api/professors/${id}`;
 
     xhttp.open("DELETE", url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
   }
 
-  addStudent(id, nameValue, classValue, majorValue) {
-    console.log("In addStudent()");
+  addProfessor(id, nameValue, titleValue, departmentValue) {
+    console.log("In addProfessor()");
     console.log(id);
 
     var xhttp = new XMLHttpRequest();
@@ -144,8 +134,8 @@ class StudentModel {
         let data = { response: JSON.parse(this.responseText) };
         let event;
 
-        if (id) event = new CustomEvent("StudentEdited", { detail: data });
-        else event = new CustomEvent("StudentAdded", { detail: data });
+        if (id) event = new CustomEvent("ProfessorEdited", { detail: data });
+        else event = new CustomEvent("ProfessorAdded", { detail: data });
         element.dispatchEvent(event);
       }
       if (this.readyState == 4 && this.status == 400) {
@@ -164,59 +154,29 @@ class StudentModel {
 
     let url;
 
-    if (id) url = `http://localhost:3050/api/students/${id}`;
-    else url = `http://localhost:3050/api/students/`;
+    if (id) url = `http://localhost:3050/api/professors/${id}`;
+    else url = `http://localhost:3050/api/professors/`;
 
     xhttp.open("POST", url, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send(
-      JSON.stringify({ name: nameValue, class: classValue, major: majorValue })
-    );
-  }
-
-  editStudent(nameValue, classValue, majorValue) {
-    console.log("In addStudent()");
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-      if (this.readyState == 4 && this.status == 200) {
-        console.log(this.responseText);
-        const element = document.querySelector("#root");
-        let data = { response: this.responseText };
-        let event = new CustomEvent("StudentAdded", { detail: data });
-        element.dispatchEvent(event);
-      }
-      if (this.readyState == 4 && this.status == 400) {
-        console.log(this.responseText);
-        const element = document.querySelector("#root");
-        let data = JSON.parse(this.responseText);
-        console.log(data);
-
-        let message = "";
-        if (data.errorMessages) message = data.errorMessages.join(",&nbsp;");
-        else message = "An error ocurred";
-        let event = new CustomEvent("Error", { detail: message });
-        element.dispatchEvent(event);
-      }
-    };
-
-    let url = `http://localhost:3050/api/students/`;
-
-    xhttp.open("POST", url, true);
-    xhttp.setRequestHeader("Content-type", "application/json");
-    xhttp.send(
-      JSON.stringify({ name: nameValue, class: classValue, major: majorValue })
+      JSON.stringify({
+        name: nameValue,
+        title: titleValue,
+        department: departmentValue,
+      })
     );
   }
 }
 
-class StudentView {
+class ProfessorView {
   constructor() {}
 
-  createView(studentResponse) {
-    this.studentData = studentResponse.data;
-    this.pageParameters = studentResponse.pageparameters;
-    this.sortParameters = studentResponse.sortparameters;
-    this.filterParameters = studentResponse.filterparameters;
+  createView(professorResponse) {
+    this.professorData = professorResponse.data;
+    this.pageParameters = professorResponse.pageparameters;
+    this.sortParameters = professorResponse.sortparameters;
+    this.filterParameters = professorResponse.filterparameters;
 
     this.app = viewHelper.getElement("#root");
     this.app.replaceChildren();
@@ -241,7 +201,7 @@ class StudentView {
 
     let titleTemplate =
       '<div class = "title ht-4 mb-2 d-flex"> ' +
-      "<h3>Students</h3>" +
+      "<h3>Professors</h3>" +
       '<div class="ml-auto form-inline">' +
       '<div class="input-group">' +
       `<input id="nameSearch" class="form-control" type="text" placeholder="Search" value="${searchValue}"></input>` +
@@ -265,14 +225,10 @@ class StudentView {
   createFilterPillTemplate() {
     let filterPillTemplateLabel = "filters:";
     let filterpillTemplateValue = "";
-    if (this.filterParameters.class)
-      filterpillTemplateValue += `<span class="badge badge-pill badge-secondary ml-2">class = ${this.filterParameters.class}</span>`;
-    if (this.filterParameters.major)
-      filterpillTemplateValue += `<span class="badge badge-pill badge-secondary ml-2">major = ${this.filterParameters.major}</span>`;
-    if (this.filterParameters.gpamin)
-      filterpillTemplateValue += `<span class="badge badge-pill badge-secondary ml-2">gpa >= ${this.filterParameters.gpamin}</span>`;
-    if (this.filterParameters.gpamax)
-      filterpillTemplateValue += `<span class="badge badge-pill badge-secondary ml-2">gpa <= ${this.filterParameters.gpamax}</span>`;
+    if (this.filterParameters.title)
+      filterpillTemplateValue += `<span class="badge badge-pill badge-secondary ml-2">title = ${this.filterParameters.title}</span>`;
+    if (this.filterParameters.department)
+      filterpillTemplateValue += `<span class="badge badge-pill badge-secondary ml-2">department = ${this.filterParameters.department}</span>`;
 
     if (!filterpillTemplateValue) filterpillTemplateValue = "&nbsp;none";
 
@@ -361,47 +317,49 @@ class StudentView {
   createCards() {
     let cardDeck = viewHelper.createElement("div", ["card-deck"]);
 
-    //Create Student Cards
-    for (var student of this.studentData) {
+    //Create Professor Cards
+    for (var professor of this.professorData) {
       let card = viewHelper.createElement("div", ["card"]);
-      card.setAttribute("onClick", "app.handleCardClick(" + student.id + ");");
+      card.setAttribute(
+        "onClick",
+        "app.handleCardClick(" + professor.id + ");"
+      );
 
       let cardBody = viewHelper.createElement("div", ["card-body"]);
       let cardTitle = viewHelper.createElement("div", ["card-title"]);
-      cardTitle.textContent = student.name;
+      cardTitle.textContent = professor.name;
       let cardText = viewHelper.createElement("p", ["card-text"]);
-      cardText.textContent = student.class;
+      cardText.textContent = professor.class;
 
       cardBody.append(cardTitle, cardText);
       card.append(cardBody);
       cardDeck.append(card);
     }
 
-    if (this.studentData.length == 0)
+    if (this.professorData.length == 0)
       cardDeck.innerHTML =
         "<div class='ml-auto mr-auto'>no results match the specified filters</div>";
 
     return cardDeck;
   }
 
-  createStudentModal(id) {
-    let student = this.studentData.find((x) => x.id === id);
-    let modalTitle = viewHelper.getElement("#studentModalLabel");
-    modalTitle.textContent = student.name;
+  createProfessorModal(id) {
+    let professor = this.professorData.find((x) => x.id === id);
+    let modalTitle = viewHelper.getElement("#professorModalLabel");
+    modalTitle.textContent = professor.name;
 
-    let modalButtons = viewHelper.getElement("#studentModalbuttons");
+    let modalButtons = viewHelper.getElement("#professorModalbuttons");
     let modalButtonsTemplate =
       `<button type="button" class="btn btn-outline-secondary" onClick="app.handleDeleteCard(${id});">Delete</button>` +
       `<button type="button" class="btn btn-outline-secondary ml-2" onClick="app.handleOpenEditCard(${id});">Edit</button>`;
     modalButtons.innerHTML = modalButtonsTemplate;
 
-    let classRow = this.createDataRow("Class", student.class);
-    let majorRow = this.createDataRow("Major", student.major);
-    let gpaRow = this.createDataRow("GPA", student.gpa);
+    let titleRow = this.createDataRow("Title", professor.title);
+    let departmentRow = this.createDataRow("Department", professor.department);
 
-    let modalBody = viewHelper.getElement("#studentModalBody");
+    let modalBody = viewHelper.getElement("#professorModalBody");
     modalBody.replaceChildren();
-    modalBody.append(classRow, majorRow, gpaRow);
+    modalBody.append(titleRow, departmentRow);
 
     let btnFooterClose = viewHelper.createElement("button", [
       "btn",
@@ -410,34 +368,34 @@ class StudentView {
     btnFooterClose.setAttribute("type", "button");
     btnFooterClose.setAttribute("data-dismiss", "modal");
     btnFooterClose.textContent = "Close";
-    let modalFooter = viewHelper.getElement("#studentModalFooter");
+    let modalFooter = viewHelper.getElement("#professorModalFooter");
     modalFooter.replaceChildren();
     modalFooter.append(btnFooterClose);
 
-    $("#studentModal").modal("toggle");
+    $("#professorModal").modal("toggle");
   }
 
-  createAddStudentModal() {
-    let modalTitle = viewHelper.getElement("#studentModalLabel");
-    modalTitle.textContent = "Add Student";
+  createAddProfessorModal() {
+    let modalTitle = viewHelper.getElement("#professorModalLabel");
+    modalTitle.textContent = "Add Professor";
 
-    let modalButtons = viewHelper.getElement("#studentModalbuttons");
+    let modalButtons = viewHelper.getElement("#professorModalbuttons");
     modalButtons.replaceChildren();
 
     let nameRow = this.createInputRow("Name", "name", "");
-    let classRow = this.createInputRow("Class", "class", "");
-    let majorRow = this.createInputRow("Major", "major", "");
+    let titleRow = this.createInputRow("Title", "title", "");
+    let departmentRow = this.createInputRow("Department", "department", "");
 
-    let modalBody = viewHelper.getElement("#studentModalBody");
+    let modalBody = viewHelper.getElement("#professorModalBody");
     modalBody.replaceChildren();
-    modalBody.append(nameRow, classRow, majorRow);
+    modalBody.append(nameRow, titleRow, departmentRow);
 
     let btnFooterSave = viewHelper.createElement("button", [
       "btn",
       "btn-primary",
     ]);
     btnFooterSave.setAttribute("type", "button");
-    btnFooterSave.setAttribute("onclick", "app.handleSaveStudentClick()");
+    btnFooterSave.setAttribute("onclick", "app.handleSaveProfessorClick()");
     btnFooterSave.textContent = "Save";
     let btnFooterCancel = viewHelper.createElement("button", [
       "btn",
@@ -446,28 +404,32 @@ class StudentView {
     btnFooterCancel.setAttribute("type", "button");
     btnFooterCancel.setAttribute("data-dismiss", "modal");
     btnFooterCancel.textContent = "Cancel";
-    let modalFooter = viewHelper.getElement("#studentModalFooter");
+    let modalFooter = viewHelper.getElement("#professorModalFooter");
     modalFooter.replaceChildren();
     modalFooter.append(btnFooterCancel, btnFooterSave);
 
-    $("#studentModal").modal("toggle");
+    $("#professorModal").modal("toggle");
   }
 
-  createEditStudentModal(id) {
-    let student = this.studentData.find((x) => x.id === id);
-    let modalTitle = viewHelper.getElement("#studentModalLabel");
-    modalTitle.textContent = "Edit Student";
+  createEditProfessorModal(id) {
+    let professor = this.professorData.find((x) => x.id === id);
+    let modalTitle = viewHelper.getElement("#professorModalLabel");
+    modalTitle.textContent = "Edit Professor";
 
-    let modalButtons = viewHelper.getElement("#studentModalbuttons");
+    let modalButtons = viewHelper.getElement("#professorModalbuttons");
     modalButtons.replaceChildren();
 
-    let nameRow = this.createInputRow("Name", "name", student.name);
-    let classRow = this.createInputRow("Class", "class", student.class);
-    let majorRow = this.createInputRow("Major", "major", student.major);
+    let nameRow = this.createInputRow("Name", "name", professor.name);
+    let titleRow = this.createInputRow("Title", "title", professor.title);
+    let departmentRow = this.createInputRow(
+      "Department",
+      "department",
+      professor.department
+    );
 
-    let modalBody = viewHelper.getElement("#studentModalBody");
+    let modalBody = viewHelper.getElement("#professorModalBody");
     modalBody.replaceChildren();
-    modalBody.append(nameRow, classRow, majorRow);
+    modalBody.append(nameRow, titleRow, departmentRow);
 
     let btnFooterSave = viewHelper.createElement("button", [
       "btn",
@@ -476,7 +438,7 @@ class StudentView {
     btnFooterSave.setAttribute("type", "button");
     btnFooterSave.setAttribute(
       "onclick",
-      "app.handleSaveStudentClick(" + id + ")"
+      "app.handleSaveProfessorClick(" + id + ")"
     );
     btnFooterSave.textContent = "Save";
     let btnFooterCancel = viewHelper.createElement("button", [
@@ -486,29 +448,23 @@ class StudentView {
     btnFooterCancel.setAttribute("type", "button");
     btnFooterCancel.setAttribute("data-dismiss", "modal");
     btnFooterCancel.textContent = "Cancel";
-    let modalFooter = viewHelper.getElement("#studentModalFooter");
+    let modalFooter = viewHelper.getElement("#professorModalFooter");
     modalFooter.replaceChildren();
     modalFooter.append(btnFooterCancel, btnFooterSave);
   }
 
   createFilterModal() {
-    let modalTitle = viewHelper.getElement("#studentModalLabel");
+    let modalTitle = viewHelper.getElement("#professorModalLabel");
     modalTitle.textContent = "Filters";
 
-    let modalButtons = viewHelper.getElement("#studentModalbuttons");
+    let modalButtons = viewHelper.getElement("#professorModalbuttons");
     modalButtons.replaceChildren();
 
-    let classValue = this.filterParameters.class
-      ? this.filterParameters.class
+    let titleValue = this.filterParameters.title
+      ? this.filterParameters.title
       : "";
-    let majorValue = this.filterParameters.major
-      ? this.filterParameters.major
-      : "";
-    let gpaMinValue = this.filterParameters.gpamin
-      ? this.filterParameters.gpamin
-      : "";
-    let gpaMaxValue = this.filterParameters.gpamax
-      ? this.filterParameters.gpamax
+    let departmentValue = this.filterParameters.department
+      ? this.filterParameters.department
       : "";
     let sortByValue = this.sortParameters.sortby
       ? this.sortParameters.sortby
@@ -517,64 +473,44 @@ class StudentView {
       ? this.sortParameters.sortorder
       : "";
 
-    let classOptions = [
+    let titleOptions = [
       { name: "", value: "" },
-      { name: "Senior", value: "senior" },
-      { name: "Junior", value: "junior" },
-      { name: "Sophmore", value: "sophmore" },
-      { name: "Freshman", value: "freshman" },
+      { name: "Professor", value: "professor" },
+      { name: "Associate Professor", value: "associate professor" },
+      { name: "Assistant Professor", value: "assistant professor" },
+      { name: "Visiting Professor", value: "visiting professor" },
     ];
-    let majorOptions = [
+    let departmentOptions = [
       { name: "", value: "" },
-      { name: "Art", value: "art" },
-      { name: "Biology", value: "biology" },
+      { name: "Civil Engineering", value: "civil engineering" },
+      { name: "Mathematics", value: "mathematics" },
       { name: "Computer Science", value: "computer science" },
-      { name: "Engineering", value: "engineering" },
+      { name: "Manufacturing Engineering", value: "manufacturing engineering" },
     ];
     let sortByOptions = [
       { name: "", value: "" },
       { name: "Id", value: "id" },
       { name: "Name", value: "name" },
-      { name: "Class", value: "class" },
-      { name: "Major", value: "major" },
+      { name: "Title", value: "title" },
+      { name: "Department", value: "department" },
     ];
     let sortOrderOptions = [
       { name: "", value: "" },
       { name: "Ascending", value: "asc" },
       { name: "Descending", value: "desc" },
     ];
-    let gpaOptions = [
-      { name: "", value: "" },
-      { name: "2.0", value: "2.0" },
-      { name: "2.5", value: "2.5" },
-      { name: "3.0", value: "3.0" },
-      { name: "3.5", value: "3.5" },
-      { name: "4.0", value: "4.0" },
-    ];
 
-    let classRow = this.createSelectRow(
-      "Class",
-      "filterClass",
-      classValue,
-      classOptions
+    let titleRow = this.createSelectRow(
+      "Title",
+      "filterTitle",
+      titleValue,
+      titleOptions
     );
-    let majorRow = this.createSelectRow(
-      "Major",
-      "filterMajor",
-      majorValue,
-      majorOptions
-    );
-    let gpaMinRow = this.createSelectRow(
-      "Min GPA",
-      "filterGpaMin",
-      gpaMinValue,
-      gpaOptions
-    );
-    let gpaMaxRow = this.createSelectRow(
-      "Max GPA",
-      "filterGpaMax",
-      gpaMaxValue,
-      gpaOptions
+    let departmentRow = this.createSelectRow(
+      "Department",
+      "filterDepartment",
+      departmentValue,
+      departmentOptions
     );
     let sortByRow = this.createSelectRow(
       "Sort By",
@@ -589,16 +525,9 @@ class StudentView {
       sortOrderOptions
     );
 
-    let modalBody = viewHelper.getElement("#studentModalBody");
+    let modalBody = viewHelper.getElement("#professorModalBody");
     modalBody.replaceChildren();
-    modalBody.append(
-      classRow,
-      majorRow,
-      gpaMinRow,
-      gpaMaxRow,
-      sortByRow,
-      sortOrderRow
-    );
+    modalBody.append(titleRow, departmentRow, sortByRow, sortOrderRow);
 
     let btnFooterApply = viewHelper.createElement("button", [
       "btn",
@@ -614,21 +543,21 @@ class StudentView {
     btnFooterCancel.setAttribute("type", "button");
     btnFooterCancel.setAttribute("data-dismiss", "modal");
     btnFooterCancel.textContent = "Cancel";
-    let modalFooter = viewHelper.getElement("#studentModalFooter");
+    let modalFooter = viewHelper.getElement("#professorModalFooter");
     modalFooter.replaceChildren();
     modalFooter.append(btnFooterCancel, btnFooterApply);
 
-    $("#studentModal").modal("toggle");
+    $("#professorModal").modal("toggle");
   }
 
   createDataRow(label, value) {
     let row = viewHelper.createElement("div", ["form-group", "row"]);
     let labelColumn = viewHelper.createElement("label", [
-      "col-sm-2",
+      "col-sm-3",
       "col-form-label",
     ]);
     labelColumn.textContent = label;
-    let fieldColumn = viewHelper.createElement("div", ["col-sm-10"]);
+    let fieldColumn = viewHelper.createElement("div", ["col-sm-9"]);
     let fieldText = viewHelper.createElement("label", [
       "form-control-plaintext",
     ]);
@@ -641,11 +570,11 @@ class StudentView {
   createInputRow(label, name, value) {
     let row = viewHelper.createElement("div", ["form-group", "row"]);
     let labelColumn = viewHelper.createElement("label", [
-      "col-sm-2",
+      "col-sm-3",
       "col-form-label",
     ]);
     labelColumn.textContent = label;
-    let fieldColumn = viewHelper.createElement("div", ["col-sm-10"]);
+    let fieldColumn = viewHelper.createElement("div", ["col-sm-9"]);
     let fieldText = viewHelper.createElement("input", ["form-control"]);
     fieldText.setAttribute("id", name);
     fieldText.value = value;
@@ -657,11 +586,11 @@ class StudentView {
   createSelectRow(label, name, value, data) {
     let row = viewHelper.createElement("div", ["form-group", "row"]);
     let labelColumn = viewHelper.createElement("label", [
-      "col-sm-2",
+      "col-sm-3",
       "col-form-label",
     ]);
     labelColumn.textContent = label;
-    let fieldColumn = viewHelper.createElement("div", ["col-sm-10"]);
+    let fieldColumn = viewHelper.createElement("div", ["col-sm-9"]);
     let fieldText = viewHelper.createElement("select", ["form-control"]);
 
     for (var option of data) {
@@ -681,11 +610,11 @@ class StudentView {
   createDeleteRow(id) {
     let row = viewHelper.createElement("div", ["form-group", "row"]);
     let labelColumn = viewHelper.createElement("label", [
-      "col-sm-2",
+      "col-sm-3",
       "col-form-label",
     ]);
     labelColumn.textContent = "";
-    let fieldColumn = viewHelper.createElement("div", ["col-sm-10"]);
+    let fieldColumn = viewHelper.createElement("div", ["col-sm-9"]);
 
     let btnDelete = viewHelper.createElement("button", [
       "btn",
@@ -726,23 +655,23 @@ class StudentView {
   }
 }
 
-class StudentController {
+class ProfessorController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
 
     const element = document.querySelector("#root");
-    element.addEventListener("GetStudentData", function (event) {
-      app.handleStudentData(event.detail);
+    element.addEventListener("GetProfessorData", function (event) {
+      app.handleProfessorData(event.detail);
     });
-    element.addEventListener("StudentDeleted", function (event) {
-      app.handleStudentDeleted(event.detail);
+    element.addEventListener("ProfessorDeleted", function (event) {
+      app.handleProfessorDeleted(event.detail);
     });
-    element.addEventListener("StudentAdded", function (event) {
-      app.handleStudentAdded(event.detail);
+    element.addEventListener("ProfessorAdded", function (event) {
+      app.handleProfessorAdded(event.detail);
     });
-    element.addEventListener("StudentEdited", function (event) {
-      app.handleStudentEdited(event.detail);
+    element.addEventListener("ProfessorEdited", function (event) {
+      app.handleProfessorEdited(event.detail);
     });
     element.addEventListener("Error", function (event) {
       console.log(event.detail);
@@ -751,65 +680,70 @@ class StudentController {
     });
   }
 
-  handleStudentData(studentResponse) {
+  handleProfessorData(professorResponse) {
     console.log("create view");
-    this.view.createView(studentResponse);
+    this.view.createView(professorResponse);
   }
 
   handleCardClick(id) {
     console.log("modal " + id + " clicked");
-    this.view.createStudentModal(id);
+    this.view.createProfessorModal(id);
   }
 
   handleAddCardClick(id) {
     console.log("modal - Add New - clicked");
-    this.view.createAddStudentModal(id);
+    this.view.createAddProfessorModal(id);
   }
 
-  handleSaveStudentClick(id) {
-    console.log("Student Save clicked");
+  handleSaveProfessorClick(id) {
+    console.log("Professor Save clicked");
 
     let nameValue = document.getElementById("name").value;
-    let classValue = document.getElementById("class").value;
-    let majorValue = document.getElementById("major").value;
+    let titleValue = document.getElementById("title").value;
+    let departmentValue = document.getElementById("department").value;
 
-    this.model.addStudent(id, nameValue, classValue, majorValue);
+    this.model.addProfessor(id, nameValue, titleValue, departmentValue);
   }
 
-  handleStudentAdded(data) {
+  handleProfessorAdded(data) {
+    console.log("----professor added.......", data);
+
     this.handleSuccess(
-      `Student ${data.response.data.name} was added successfully`
+      `Professor ${data.response.data.name} was added successfully`
     );
-    this.model.getStudentData();
-    $("#studentModal").modal("toggle");
+    this.model.getProfessorData();
+    $("#professorModal").modal("toggle");
   }
 
-  handleStudentEdited(data) {
+  handleProfessorEdited(data) {
     this.handleSuccess(
-      `Student ${data.response.data.name} was edited successfully`
+      `Professor ${data.response.data.name} was edited successfully`
     );
-    this.model.getStudentData();
-    $("#studentModal").modal("toggle");
+    this.model.getProfessorData();
+    $("#professorModal").modal("toggle");
   }
 
   handleDeleteCard(id) {
     console.log("modal " + id + " delete");
-    this.model.deleteStudent(id);
+    this.model.deleteProfessor(id);
   }
 
-  handleStudentDeleted(data) {
-    console.log("-----delete me.....", data);
+  handleProfessorDeleted(data) {
+    console.log(
+      "----professor deleted.......",
+      JSON.parse(data.response).data.name
+    );
     this.handleSuccess(
-      `Student  ${JSON.parse(data.response).data.name} deleted successfully`
+      `Professor ${JSON.parse(data.response).data.name} deleted successfully`
     );
 
-    this.model.getStudentData();
-    $("#studentModal").modal("toggle");
+    this.model.getProfessorData();
+    $("#professorModal").modal("toggle");
   }
 
   handleOpenEditCard(id) {
     console.log("modal - Edit " + id + " - clicked");
-    this.view.createEditStudentModal(id);
+    this.view.createEditProfessorModal(id);
   }
 
   handleChangePage(page) {
@@ -821,16 +755,9 @@ class StudentController {
   }
 
   handleApplyFilters() {
-    let filterClass = document.getElementById("filterClass").value;
-    let filterMajor = document.getElementById("filterMajor").value;
-    let gpaMin = document.getElementById("filterGpaMin").value;
-    let gpaMax = document.getElementById("filterGpaMax").value;
-    let filterParameters = {
-      class: filterClass,
-      major: filterMajor,
-      gpamin: gpaMin,
-      gpamax: gpaMax,
-    };
+    let filterTitle = document.getElementById("filterTitle").value;
+    let filterDepartment = document.getElementById("filterDepartment").value;
+    let filterParameters = { title: filterTitle, department: filterDepartment };
 
     let sortBy = document.getElementById("sortBy").value;
     let sortOrder = document.getElementById("sortOrder").value;
@@ -840,15 +767,15 @@ class StudentController {
     this.model.sortParameters = sortParameters;
 
     this.model.pageParameters.page = 1;
-    this.model.getStudentData();
-    $("#studentModal").modal("toggle");
+    this.model.getProfessorData();
+    $("#professorModal").modal("toggle");
   }
 
   handleSearchClick() {
     let nameSearch = document.getElementById("nameSearch").value;
     this.model.filterParameters.namesearch = nameSearch;
     this.model.pageParameters.page = 1;
-    this.model.getStudentData();
+    this.model.getProfessorData();
   }
 
   handleError(errormessage) {
@@ -861,4 +788,4 @@ class StudentController {
   }
 }
 
-const app = new StudentController(new StudentModel(), new StudentView());
+const app = new ProfessorController(new ProfessorModel(), new ProfessorView());

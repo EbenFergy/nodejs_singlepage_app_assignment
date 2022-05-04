@@ -1,3 +1,5 @@
+var Error = require("../framework/errors");
+
 class StudentDomainObject {
     constructor(jsonObject, isInsert) {
         this.initialize();
@@ -40,7 +42,15 @@ class StudentDomainObject {
         if (jsonObject.major != null)
             this.studentObject.major = jsonObject.major;
 
+        //validate that a Senior must have a major.
+        if (this.studentObject.class == 'Senior' && !this.studentObject.major){
+            this.valid = false;
+            this.errorMessages.push('Senior students must have a declared Major');
+        }
 
+
+        if (!this.valid)
+            throw new Error.ValidationError(this.errorMessages);
     }
     
 }
